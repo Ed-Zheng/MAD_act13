@@ -183,6 +183,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
+                  onChanged: (value) {
+                    setState(() {});
+                  },
                   decoration: InputDecoration(
                     labelText: 'Secret Password',
                     prefixIcon:
@@ -216,6 +219,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     return null;
                   },
                 ),
+
+                const SizedBox(height: 10),
+
+                _buildPasswordStrengthIndicator(_passwordController.text),
+
                 const SizedBox(height: 30),
 
                 // Submit Button w/ Loading Animation
@@ -332,4 +340,64 @@ class _SignupScreenState extends State<SignupScreen> {
       validator: validator,
     );
   }
+}
+
+Widget _buildPasswordStrengthIndicator(String password) {
+  double strength = _passwordStrength(password);
+  Color color;
+  String label;
+
+  if (strength < 0.3) {
+    color = Colors.red;
+    label = 'Weak';
+  } else if (strength < 0.6) {
+    color = Colors.orange;
+    label = 'Fair';
+  } else if (strength < 0.8) {
+    color = Colors.yellow[700]!;
+    label = 'Good';
+  } else {
+    color = Colors.green;
+    label = 'Strong';
+  }
+
+  return AnimatedContainer(
+    duration: const Duration(milliseconds: 300),
+    padding: const EdgeInsets.symmetric(horizontal: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        LinearProgressIndicator(
+          value: strength,
+          color: color,
+          backgroundColor: Colors.grey[300],
+          minHeight: 8,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Password Strength: $label',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: color,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+double _passwordStrength(String password) {
+  if (password.isEmpty) return 0.0;
+
+  double strength = 0;
+
+  if (password.length >= 6) strength += 0.2;
+  if (password.length >= 10) strength += 0.4;
+  if (RegExp(r'[A-Z]').hasMatch(password)) strength += 0.2;
+  if (RegExp(r'[0-9]').hasMatch(password)) strength += 0.2;
+  if (RegExp(r'[!@#\$&*~%^()-]').hasMatch(password)) strength += 0.2;
+
+  return strength.clamp(0.0, 1.0);
 }
