@@ -17,6 +17,9 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
+  final List<String> _avatars = ['🧙‍♂️', '🦸‍♀️', '🐉', '😭', '🚀'];
+  String? _selectedAvatar;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -42,7 +45,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && _selectedAvatar != null) {
       setState(() {
         _isLoading = true;
       });
@@ -57,10 +60,20 @@ class _SignupScreenState extends State<SignupScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => SuccessScreen(userName: _nameController.text),
+            builder: (context) => SuccessScreen(
+              userName: _nameController.text,
+              userAvatar: _selectedAvatar!,
+            ),
           ),
         );
       });
+    } else if (_selectedAvatar == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Choose an avatar to start your adventure!'),
+          backgroundColor: Colors.deepPurple,
+        ),
+      );
     }
   }
 
@@ -206,6 +219,56 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 30),
 
                 // Submit Button w/ Loading Animation
+                const Text(
+                  'Choose Your Adventure Avatar:',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 12,
+                  children: _avatars.map((emoji) {
+                    final bool isSelected = _selectedAvatar == emoji;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedAvatar = emoji;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected
+                              ? Colors.deepPurple
+                              : Colors.deepPurple[100],
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.deepPurple.withOpacity(0.4),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
+                                  )
+                                ]
+                              : [],
+                        ),
+                        child: Text(
+                          emoji,
+                          style: TextStyle(
+                            fontSize: 36,
+                            color: isSelected ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                const SizedBox(height: 40),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   width: _isLoading ? 60 : double.infinity,
@@ -213,7 +276,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: _isLoading
                       ? const Center(
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
+                              valueColor: AlwaysStoppedAnimation<Color>(
                                 Colors.deepPurple),
                           ),
                         )
@@ -232,7 +295,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             children: [
                               Text(
                                 'Start My Adventure',
-                                style: TextStyle(
+                                  style: TextStyle(
                                     fontSize: 18, color: Colors.white),
                               ),
                               SizedBox(width: 10),

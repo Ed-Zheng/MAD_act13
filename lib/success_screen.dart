@@ -4,8 +4,13 @@ import 'package:confetti/confetti.dart';
 
 class SuccessScreen extends StatefulWidget {
   final String userName;
+  final String userAvatar;
 
-  const SuccessScreen({super.key, required this.userName});
+  const SuccessScreen({
+    super.key,
+    required this.userName,
+    required this.userAvatar,
+  });
 
   @override
   State<SuccessScreen> createState() => _SuccessScreenState();
@@ -58,6 +63,13 @@ class _SuccessScreenState extends State<SuccessScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Text(
+                    widget.userAvatar,
+                    style: const TextStyle(fontSize: 100),
+                  ),
+
+                  const SizedBox(height: 20),
+
                   // Celebration it is  Icon
                   AnimatedContainer(
                     duration: const Duration(seconds: 1),
