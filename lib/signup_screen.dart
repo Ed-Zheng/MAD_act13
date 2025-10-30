@@ -50,6 +50,15 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = true;
       });
 
+      double strength = _passwordStrength(_passwordController.text);
+      List<String> badges = [];
+
+      if (strength >= 0.8) {
+        badges.add('🔒 Strong Password Master');
+      }
+
+      badges.add('✅ Profile Completer');
+
       // Simulate API call
       Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return; // Check if the widget is still in the tree
@@ -63,6 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
             builder: (context) => SuccessScreen(
               userName: _nameController.text,
               userAvatar: _selectedAvatar!,
+              userBadges: badges,
             ),
           ),
         );

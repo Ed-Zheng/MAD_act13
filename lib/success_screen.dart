@@ -5,11 +5,13 @@ import 'package:confetti/confetti.dart';
 class SuccessScreen extends StatefulWidget {
   final String userName;
   final String userAvatar;
+  final List<String> userBadges;
 
   const SuccessScreen({
     super.key,
     required this.userName,
     required this.userAvatar,
+    required this.userBadges,
   });
 
   @override
@@ -31,6 +33,54 @@ class _SuccessScreenState extends State<SuccessScreen> {
   void dispose() {
     _confettiController.dispose();
     super.dispose();
+  }
+
+  Widget _buildBadge(String badgeText) {
+    String emoji = '';
+    String title = badgeText;
+    if (badgeText.contains(' ')) {
+      emoji = badgeText.split(' ').first;
+      title = badgeText.substring(emoji.length).trim();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.deepPurple[100],
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.deepPurple, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepPurple.withOpacity(0.2),
+            blurRadius: 6,
+            offset: const Offset(2, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (emoji.isNotEmpty)
+            Text(
+              emoji, 
+              style: const TextStyle(
+                fontSize: 24
+              )
+            ),
+            
+          if (emoji.isNotEmpty) const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -120,8 +170,32 @@ class _SuccessScreenState extends State<SuccessScreen> {
 
                   const SizedBox(height: 50),
 
+                  if (widget.userBadges.isNotEmpty) ...[
+                    const Text(
+                      '🏅 Your Achievement Badges:',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 10,
+                        children:
+                            widget.userBadges.map(_buildBadge).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+
                   // Daaa... Continue Button
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: () {
                       _confettiController.play();
                     },
@@ -133,7 +207,8 @@ class _SuccessScreenState extends State<SuccessScreen> {
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    child: const Text(
+                    icon: const Icon(Icons.celebration, color: Colors.white),
+                    label: const Text(
                       'More Celebration!',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
