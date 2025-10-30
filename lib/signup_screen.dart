@@ -20,6 +20,20 @@ class _SignupScreenState extends State<SignupScreen> {
   final List<String> _avatars = ['🧙‍♂️', '🦸‍♀️', '🐉', '😭', '🚀'];
   String? _selectedAvatar;
 
+  double _progress = 0.0;
+  final Set<String> _completedFields = {};
+  bool _showCelebration = false;
+  String _currentMessage = 'Start your adventure!';
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(_updateProgress);
+    _emailController.addListener(_updateProgress);
+    _passwordController.addListener(_updateProgress);
+    _dobController.addListener(_updateProgress);
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -27,6 +41,65 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController.dispose();
     _dobController.dispose();
     super.dispose();
+  }
+
+  void _updateProgress() {
+    final newCompletedFields = <String>{};
+    
+    if (_nameController.text.isNotEmpty) newCompletedFields.add('name');
+    if (_emailController.text.isNotEmpty && _emailController.text.contains('@') && _emailController.text.contains('.')) newCompletedFields.add('email');
+    if (_passwordController.text.isNotEmpty && _passwordController.text.length >= 6) newCompletedFields.add('password');
+    if (_dobController.text.isNotEmpty) newCompletedFields.add('dob');
+    
+    final totalFields = 4;
+    final completedCount = newCompletedFields.length;
+    final newProgress = completedCount / totalFields;
+
+    final oldProgress = _progress;
+    _progress = newProgress;
+    
+    _completedFields.clear();
+    _completedFields.addAll(newCompletedFields);
+
+    if (_shouldCelebrateMilestone(oldProgress, newProgress)) {
+      _triggerMilestoneCelebration(newProgress);
+    }
+
+    setState(() {});
+  }
+
+  bool _shouldCelebrateMilestone(double oldProgress, double newProgress) {
+    final milestones = [0.25, 0.5, 0.75, 1.0];
+    for (final milestone in milestones) {
+      if (oldProgress < milestone && newProgress >= milestone) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _triggerMilestoneCelebration(double progress) {
+    setState(() {
+      _showCelebration = true;
+      
+      if (progress >= 1.0) {
+        _currentMessage = 'Great start!';
+      } else if (progress >= 0.75) {
+        _currentMessage = 'Halfway there!';
+      } else if (progress >= 0.5) {
+        _currentMessage = 'Almost done!';
+      } else if (progress >= 0.25) {
+        _currentMessage = 'Ready for adventure!';
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _showCelebration = false;
+        });
+      }
+    });
   }
 
   // Date Picker Function
@@ -44,7 +117,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  void _submitForm() {
+    void _submitForm() {
     if (_formKey.currentState!.validate() && _selectedAvatar != null) {
       setState(() {
         _isLoading = true;
@@ -102,6 +175,116 @@ class _SignupScreenState extends State<SignupScreen> {
             key: _formKey,
             child: Column(
               children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple[50],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.deepPurple[100]!),
+                  ),
+
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Adventure Progress',
+                            style: TextStyle(
+                              color: Colors.deepPurple[800],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+
+                          Text(
+                            '${(_progress * 100).round()}%',
+                            style: TextStyle(
+                              color: Colors.deepPurple[800],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 15),
+                      
+                      Stack(
+                        children: [
+                          Container(
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeInOut,
+                            height: 12,
+                            width: MediaQuery.of(context).size.width * 0.8 * _progress,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.deepPurple[400]!,
+                                  Colors.deepPurple[600]!,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+                      
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Text(
+                          _currentMessage,
+                          key: ValueKey(_currentMessage),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.deepPurple[700],
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      
+                      if (_showCelebration)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.celebration, color: Colors.amber, size: 20),
+
+                              const SizedBox(width: 4),
+
+                              Text(
+                                'Milestone Reached!',
+                                style: TextStyle(
+                                  color: Colors.amber[700],
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+
+                              Icon(Icons.celebration, color: Colors.amber, size: 20),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
                 // Animated Form Header
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 500),
