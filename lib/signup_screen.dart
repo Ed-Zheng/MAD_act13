@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'success_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -79,17 +80,25 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _triggerMilestoneCelebration(double progress) {
+    HapticFeedback.lightImpact();
+    SystemSound.play(SystemSoundType.click);
+    
     setState(() {
       _showCelebration = true;
       
       if (progress >= 1.0) {
         _currentMessage = 'Great start!';
+        HapticFeedback.heavyImpact();
+        SystemSound.play(SystemSoundType.alert);
       } else if (progress >= 0.75) {
         _currentMessage = 'Halfway there!';
+        HapticFeedback.mediumImpact();
       } else if (progress >= 0.5) {
         _currentMessage = 'Almost done!';
+        HapticFeedback.selectionClick();
       } else if (progress >= 0.25) {
         _currentMessage = 'Ready for adventure!';
+        HapticFeedback.lightImpact();
       }
     });
 
@@ -104,6 +113,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   // Date Picker Function
   Future<void> _selectDate() async {
+    HapticFeedback.selectionClick();
     DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -119,6 +129,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
     void _submitForm() {
     if (_formKey.currentState!.validate() && _selectedAvatar != null) {
+      HapticFeedback.mediumImpact();
+      SystemSound.play(SystemSoundType.alert);
+      
       setState(() {
         _isLoading = true;
       });
@@ -151,6 +164,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
       });
     } else if (_selectedAvatar == null) {
+      HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Choose an avatar to start your adventure!'),
@@ -345,72 +359,131 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 20),
 
                 // DOB w/Calendar
-                TextFormField(
-                  controller: _dobController,
-                  readOnly: true,
-                  onTap: _selectDate,
-                  decoration: InputDecoration(
-                    labelText: 'Date of Birth',
-                    prefixIcon:
-                        const Icon(Icons.calendar_today, color: Colors.deepPurple),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Stack(
+                  children: [
+                    TextFormField(
+                      controller: _dobController,
+                      readOnly: true,
+                      onTap: _selectDate,
+                      decoration: InputDecoration(
+                        labelText: 'Date of Birth',
+                        prefixIcon:
+                            const Icon(Icons.calendar_today, color: Colors.deepPurple),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.date_range),
+                          onPressed: _selectDate,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'When did your adventure begin?';
+                        }
+                        return null;
+                      },
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.date_range),
-                      onPressed: _selectDate,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'When did your adventure begin?';
-                    }
-                    return null;
-                  },
+
+                    if (_dobController.text.isNotEmpty)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.4),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              )
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 20),
 
                 // Pswd Field w/ Toggle
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  decoration: InputDecoration(
-                    labelText: 'Secret Password',
-                    prefixIcon:
-                        const Icon(Icons.lock, color: Colors.deepPurple),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.deepPurple,
+                Stack(
+                  children: [
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible,
+                      onChanged: (value) {
+                        setState(() {});
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Secret Password',
+                        prefixIcon:
+                            const Icon(Icons.lock, color: Colors.deepPurple),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.deepPurple,
+                          ),
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Every adventurer needs a secret password!';
+                        }
+                        if (value.length < 6) {
+                          return 'Make it stronger! At least 6 characters';
+                        }
+                        return null;
                       },
                     ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Every adventurer needs a secret password!';
-                    }
-                    if (value.length < 6) {
-                      return 'Make it stronger! At least 6 characters';
-                    }
-                    return null;
-                  },
+
+                    if (_passwordController.text.isNotEmpty && _passwordController.text.length >= 6)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.4),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              )
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
 
                 const SizedBox(height: 10),
@@ -428,13 +501,16 @@ class _SignupScreenState extends State<SignupScreen> {
                     color: Colors.deepPurple,
                   ),
                 ),
+
                 const SizedBox(height: 10),
+
                 Wrap(
                   spacing: 12,
                   children: _avatars.map((emoji) {
                     final bool isSelected = _selectedAvatar == emoji;
                     return GestureDetector(
                       onTap: () {
+                        HapticFeedback.selectionClick();
                         setState(() {
                           _selectedAvatar = emoji;
                         });
@@ -470,6 +546,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
 
                 const SizedBox(height: 40),
+
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   width: _isLoading ? 60 : double.infinity,
@@ -519,18 +596,49 @@ class _SignupScreenState extends State<SignupScreen> {
     required IconData icon,
     required String? Function(String?) validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.deepPurple),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    bool isValid = controller.text.isNotEmpty && validator(controller.text) == null;
+    
+    return Stack(
+      children: [
+        TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(icon, color: Colors.deepPurple),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            filled: true,
+            fillColor: Colors.grey[50],
+          ),
+          validator: validator,
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
-      ),
-      validator: validator,
+        
+        if (isValid)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.4),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  )
+                ],
+              ),
+              child: const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
